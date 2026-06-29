@@ -3,81 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Performance Index Predictor | AI Dashboard</title>
+    <title>EduPredict AI – Student Performance Predictor | Analytics Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js for exporting reports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body>
+<body class="bg-dark text-light">
+    <!-- Background Decor Elements -->
     <div class="background-decor">
         <div class="circle circle-1"></div>
         <div class="circle circle-2"></div>
         <div class="circle circle-3"></div>
     </div>
 
-    <div class="app-container">
-        <header class="app-header">
-            <div class="logo">
-                <span class="logo-icon">🎓</span>
-                <h1>EduPredict AI</h1>
+    <div class="app-container container-fluid py-4">
+        <!-- Top Navigation Header -->
+        <header class="app-header d-flex justify-content-between align-items-center mb-4">
+            <div class="logo d-flex align-items-center">
+                <span class="logo-icon me-2">🎓</span>
+                <h1 class="m-0">EduPredict AI</h1>
             </div>
-            <div class="model-status {% if model_loaded %}loaded{% else %}error{% endif %}">
-                <span class="status-indicator"></span>
-                <span class="status-text">
-                    {% if model_loaded %}
-                        Model Active (Gradient Boosting)
-                    {% else %}
-                        Model Offline (Please run train.py)
-                    {% endif %}
-                </span>
+            <div class="d-flex align-items-center gap-3">
+                <div class="model-status {% if model_loaded %}loaded{% else %}error{% endif %}">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">
+                        {% if model_loaded %}
+                            Model Active (Gradient Boosting)
+                        {% else %}
+                            Model Offline (Please run train.py)
+                        {% endif %}
+                    </span>
+                </div>
             </div>
         </header>
 
-        <main class="dashboard">
-            <!-- Left Panel: Form Input -->
-            <section class="panel form-panel">
-                <div class="panel-header">
-                    <h2>Student Parameters</h2>
-                    <p>Enter study habits, previous scores, and academic parameters to predict the overall performance index.</p>
-                </div>
-                
-                <form id="prediction-form" class="predict-form">
-                    <!-- Standard Sliders Grid -->
-                    <div class="slider-section" style="margin-top: 0; padding-top: 0; border-top: none;">
-                        <h3>Academic Inputs</h3>
-                        
+        <!-- Main Dashboard Layout Grid -->
+        <div class="row g-4 mb-4">
+            <!-- Left Panel: Input Sliders -->
+            <aside class="col-lg-5 col-md-12">
+                <section class="panel form-panel h-100">
+                    <div class="panel-header mb-4">
+                        <h2>Student Parameters</h2>
+                        <p class="text-muted mb-0">Enter study habits, previous scores, and academic parameters to predict the overall performance index.</p>
+                    </div>
+
+                    <form id="prediction-form" class="predict-form d-flex flex-column gap-3">
                         <div class="form-group slider-group">
-                            <div class="slider-label-row">
-                                <label for="previous_scores">Previous Exam Scores</label>
+                            <div class="slider-label-row d-flex justify-content-between">
+                                <label for="previous_scores">Previous Exam Score</label>
                                 <span class="slider-value" id="previous_scores_val">75</span>
                             </div>
                             <input type="range" id="previous_scores" name="previous_scores" min="0" max="100" value="75" class="score-slider">
                         </div>
 
                         <div class="form-group slider-group">
-                            <div class="slider-label-row">
-                                <label for="attendance">Attendance Rate (%)</label>
+                            <div class="slider-label-row d-flex justify-content-between">
+                                <label for="attendance">Attendance Percentage (%)</label>
                                 <span class="slider-value" id="attendance_val">85</span>
                             </div>
                             <input type="range" id="attendance" name="attendance" min="0" max="100" value="85" class="score-slider">
                         </div>
-                    </div>
 
-                    <div class="slider-section">
-                        <h3>Study & Lifestyle Inputs</h3>
-                        
-                        <div class="form-row">
-                            <div class="form-group slider-group">
-                                <div class="slider-label-row">
-                                    <label for="hours_studied">Hours Studied / Day</label>
-                                    <span class="slider-value" id="hours_studied_val">5</span>
+                        <div class="row g-3">
+                            <div class="col-sm-6 form-group slider-group">
+                                <div class="slider-label-row d-flex justify-content-between">
+                                    <label for="hours_studied">Study Hours / Day</label>
+                                    <span class="slider-value" id="hours_studied_val">6</span>
                                 </div>
-                                <input type="range" id="hours_studied" name="hours_studied" min="1" max="10" value="5" class="score-slider">
+                                <input type="range" id="hours_studied" name="hours_studied" min="0" max="12" value="6" class="score-slider">
                             </div>
-                            
-                            <div class="form-group slider-group">
-                                <div class="slider-label-row">
+
+                            <div class="col-sm-6 form-group slider-group">
+                                <div class="slider-label-row d-flex justify-content-between">
                                     <label for="sleep_hours">Sleep Hours / Night</label>
                                     <span class="slider-value" id="sleep_hours_val">7</span>
                                 </div>
@@ -85,89 +91,291 @@
                             </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group slider-group">
-                                <div class="slider-label-row">
-                                    <label for="sample_papers_practiced">Practice Question Papers</label>
-                                    <span class="slider-value" id="sample_papers_practiced_val">3</span>
+                        <div class="row g-3">
+                            <div class="col-sm-6 form-group slider-group">
+                                <div class="slider-label-row d-flex justify-content-between">
+                                    <label for="sample_papers_practiced">Practice Papers Solved</label>
+                                    <span class="slider-value" id="sample_papers_practiced_val">5</span>
                                 </div>
-                                <input type="range" id="sample_papers_practiced" name="sample_papers_practiced" min="0" max="10" value="3" class="score-slider">
+                                <input type="range" id="sample_papers_practiced" name="sample_papers_practiced" min="0" max="20" value="5" class="score-slider">
                             </div>
 
-                            <div class="form-group">
-                                <label for="extracurricular_activities">Extracurricular Activities</label>
-                                <select id="extracurricular_activities" name="extracurricular_activities" required>
+                            <div class="col-sm-6 form-group">
+                                <label for="extracurricular_activities" class="dropdown-label mb-2">Extracurricular Activities</label>
+                                <select id="extracurricular_activities" name="extracurricular_activities" class="form-select bg-dark text-light border-secondary">
                                     <option value="No">No</option>
                                     <option value="Yes">Yes</option>
                                 </select>
                             </div>
                         </div>
-                    </div>
 
-                    <button type="submit" class="submit-btn" {% if not model_loaded %}disabled{% endif %}>
-                        <span>Analyze & Predict Performance</span>
-                    </button>
-                </form>
-            </section>
+                        <button type="submit" class="submit-btn btn w-100 py-3 mt-3 text-light" {% if not model_loaded %}disabled{% endif %}>
+                            <span>Analyze & Predict Performance</span>
+                        </button>
+                    </form>
+                </section>
+            </aside>
 
-            <!-- Right Panel: Output & Insights -->
-            <section class="panel result-panel">
-                <div class="prediction-idle" id="result-idle">
-                    <div class="idle-graphic">
-                        <div class="pulsing-brain">🧠</div>
-                    </div>
-                    <h3>Ready for Prediction</h3>
-                    <p>Enter student parameters and click predict to run the Gradient Boosting assessment pipeline.</p>
-                </div>
-
-                <div class="prediction-loading hidden" id="result-loading">
-                    <div class="spinner">
-                        <div class="double-bounce1"></div>
-                        <div class="double-bounce2"></div>
-                    </div>
-                    <h3>Computing Index</h3>
-                    <p>Running inferences on the trained regression model...</p>
-                </div>
-
-                <div class="prediction-success hidden" id="result-success">
-                    <div class="gauge-container">
-                        <svg class="gauge-svg" viewBox="0 0 200 200">
-                            <!-- Background Track -->
-                            <circle class="gauge-track" cx="100" cy="100" r="85"></circle>
-                            <!-- Animated Value Ring -->
-                            <circle class="gauge-ring" id="result-gauge" cx="100" cy="100" r="85"></circle>
-                        </svg>
-                        <div class="gauge-text">
-                            <span class="score-num" id="predicted-score">0</span>
-                            <span class="score-label">Performance Index</span>
+            <!-- Right Panel: Core Metrics Outcome -->
+            <main class="col-lg-7 col-md-12">
+                <section class="panel result-panel h-100 d-flex flex-column justify-content-center align-items-center">
+                    <!-- Idle View -->
+                    <div id="result-idle" class="prediction-state d-flex flex-column align-items-center text-center py-5">
+                        <div class="idle-graphic mb-4">
+                            <div class="pulsing-brain">🧠</div>
                         </div>
+                        <h3>Ready for Assessment</h3>
+                        <p class="text-muted max-width-350">Enter the parameters on the left and click the button to compute the student performance score predictions.</p>
                     </div>
 
-                    <div class="insights-container">
-                        <h3>Model Insights</h3>
-                        <div class="insight-badge" id="performance-level">Excellent</div>
-                        <p class="insight-desc" id="insight-text">
-                            The student is predicted to achieve a stellar performance score.
-                        </p>
-                        
-                        <div class="features-summary">
-                            <h4>Feature Vector</h4>
-                            <div class="badge-grid" id="badge-grid">
-                                <!-- Dynamic Badges -->
+                    <!-- Loading View -->
+                    <div id="result-loading" class="prediction-state hidden d-flex flex-column align-items-center text-center py-5">
+                        <div class="spinner mb-4">
+                            <div class="double-bounce1"></div>
+                            <div class="double-bounce2"></div>
+                        </div>
+                        <h3>Analyzing Parameters</h3>
+                        <p class="text-muted max-width-350">Computing model output through Scikit-Learn Gradient Boosting pipeline...</p>
+                    </div>
+
+                    <!-- Prediction Results Success View -->
+                    <div id="result-success" class="prediction-state hidden w-100">
+                        <div class="row g-4 align-items-center">
+                            <!-- Gauge -->
+                            <div class="col-md-5 d-flex flex-column align-items-center text-center">
+                                <div class="gauge-container mb-3">
+                                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                                        <circle class="gauge-track" cx="100" cy="100" r="85"></circle>
+                                        <circle class="gauge-ring" id="result-gauge" cx="100" cy="100" r="85"></circle>
+                                    </svg>
+                                    <div class="gauge-text">
+                                        <span class="score-num" id="predicted-score">0</span>
+                                        <span class="score-label">Predicted Index</span>
+                                    </div>
+                                </div>
+                                <div class="insight-badge" id="performance-level">Excellent</div>
+                            </div>
+                            
+                            <!-- AI Recommendations -->
+                            <div class="col-md-7">
+                                <div class="recommendations-card">
+                                    <h4 class="mb-3 d-flex align-items-center">
+                                        <span class="me-2">💡</span>AI Recommendations
+                                    </h4>
+                                    <ul class="recommendation-list list-unstyled mb-0" id="recommendations-list">
+                                        <!-- Recommendations populated dynamically -->
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
-        </main>
+            </main>
+        </div>
 
-        <footer class="app-footer">
-            <p>Data Science Major Project | Model: Gradient Boosting Regressor | Built with Flask & Vanilla CSS</p>
+        <!-- Section: Visualizations Grid -->
+        <section class="mb-4">
+            <h2 class="section-title mb-4 font-header">Statistical Visualizations</h2>
+            <div class="row g-4">
+                <!-- Feature Importance Chart -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="panel chart-panel">
+                        <h3>Feature Importance</h3>
+                        <div class="chart-container">
+                            <canvas id="importance-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actual vs Predicted Scatter -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="panel chart-panel">
+                        <h3>Actual vs Predicted Scatter Plot</h3>
+                        <div class="chart-container">
+                            <canvas id="scatter-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Residual Error Plot -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="panel chart-panel">
+                        <h3>Residual Error Plot</h3>
+                        <div class="chart-container">
+                            <canvas id="residual-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Correlation Heatmap -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="panel chart-panel">
+                        <h3>Correlation Heatmap</h3>
+                        <div class="heatmap-grid-container mt-3">
+                            <div class="heatmap-grid" id="correlation-heatmap">
+                                <!-- Heatmap grid items populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Model Evaluation Metrics -->
+        <section class="row g-4 mb-4">
+            <!-- Model Performance Card -->
+            <div class="col-lg-6 col-md-12">
+                <section class="panel evaluation-panel h-100">
+                    <h3 class="mb-4">Model Performance Card</h3>
+                    <div class="row g-3 text-center">
+                        <div class="col-6 col-sm-3">
+                            <div class="metric-card">
+                                <span class="metric-val" id="metric-algo">GBR</span>
+                                <span class="metric-lbl">Algorithm</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="metric-card">
+                                <span class="metric-val" id="metric-r2">0.9716</span>
+                                <span class="metric-lbl">R² Score</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="metric-card">
+                                <span class="metric-val" id="metric-mae">1.52</span>
+                                <span class="metric-lbl">MAE</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="metric-card">
+                                <span class="metric-val" id="metric-rmse">1.98</span>
+                                <span class="metric-lbl">RMSE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="prediction-speed mt-3 text-center text-muted">
+                        Average Inference Speed: <strong class="text-light" id="metric-speed">--</strong> ms
+                    </div>
+                </section>
+            </div>
+
+            <!-- Model Card -->
+            <div class="col-lg-6 col-md-12">
+                <section class="panel details-panel h-100">
+                    <h3 class="mb-4">Model Cards Details</h3>
+                    <table class="table table-dark table-borderless text-light card-table mb-0">
+                        <tbody>
+                            <tr>
+                                <th class="text-muted">Dataset Records</th>
+                                <td id="card-records">1,000</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Dataset Features</th>
+                                <td id="card-features">6 Features</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Train-Test Split</th>
+                                <td id="card-split">80% Train / 20% Test</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Training Accuracy (R²)</th>
+                                <td id="card-train-acc">97.20%</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Prediction Accuracy (R²)</th>
+                                <td id="card-pred-acc">97.16%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </section>
+
+        <!-- Section: Prediction History Logs -->
+        <section class="panel history-panel mb-4">
+            <div class="panel-header d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <div>
+                    <h2>Prediction History Logs</h2>
+                    <p class="text-muted mb-0">List of predictions stored inside the local SQLite database.</p>
+                </div>
+                <div class="action-buttons d-flex gap-3">
+                    <button class="btn btn-outline-cyan d-flex align-items-center" onclick="downloadPDFReport()">
+                        <span class="me-2">📁</span>Download Report PDF
+                    </button>
+                    <a href="/export_csv" class="btn btn-outline-purple d-flex align-items-center">
+                        <span class="me-2">📊</span>Export History CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-striped history-table text-light mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Previous Exam</th>
+                            <th>Attendance</th>
+                            <th>Study Hours</th>
+                            <th>Sleep Hours</th>
+                            <th>Papers Solved</th>
+                            <th>Extracurricular</th>
+                            <th>Predicted Index</th>
+                            <th>Performance Category</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-rows">
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">No prediction records found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer text-center mt-5 py-4 border-top border-secondary">
+            <p class="mb-1 text-light">Developed by <strong class="text-cyan">Vikram Reddy</strong> | Data Science Major Project</p>
+            <p class="text-muted mb-0">Powered by Flask + Scikit-Learn + Gradient Boosting | SQLite Storage | Chart.js Visuals</p>
         </footer>
     </div>
 
+    <!-- Hidden Container used strictly for PDF rendering formatting -->
+    <div id="pdf-report-template" class="hidden text-dark bg-light p-5">
+        <h1 class="text-center border-bottom pb-3 mb-4">EduPredict AI - Student Performance Report</h1>
+        <div class="mb-4">
+            <h4>Assessment Details</h4>
+            <p><strong>Date Generated:</strong> <span id="pdf-date">--</span></p>
+            <p><strong>Predicted Performance Index:</strong> <strong id="pdf-score">0</strong> / 100</p>
+            <p><strong>Performance Category:</strong> <strong id="pdf-category">--</strong></p>
+        </div>
+        <div class="mb-4">
+            <h4>Student Features Inputs</h4>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr><th>Previous Exam Score</th><td id="pdf-in-prev">--</td></tr>
+                    <tr><th>Attendance Percentage</th><td id="pdf-in-attend">--</td></tr>
+                    <tr><th>Study Hours per Day</th><td id="pdf-in-study">--</td></tr>
+                    <tr><th>Sleep Hours per Night</th><td id="pdf-in-sleep">--</td></tr>
+                    <tr><th>Practice Papers Solved</th><td id="pdf-in-papers">--</td></tr>
+                    <tr><th>Extracurricular Activities</th><td id="pdf-in-extra">--</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h4>AI-Style Recommendations</h4>
+            <ul id="pdf-recs" class="list-group">
+                <!-- Recs -->
+            </ul>
+        </div>
+        <footer class="mt-5 pt-3 border-top text-center text-muted">
+            EduPredict AI Dashboard Report - B.Tech Data Science Major Project Demonstration
+        </footer>
+    </div>
+
+    <!-- JavaScript Interactions Logic -->
     <script>
-        // Update slider numeric values dynamically
-        const sliderList = [
+        // Update slider values dynamically
+        const sliderConfig = [
             { id: 'previous_scores', valId: 'previous_scores_val' },
             { id: 'attendance', valId: 'attendance_val' },
             { id: 'hours_studied', valId: 'hours_studied_val' },
@@ -175,17 +383,17 @@
             { id: 'sample_papers_practiced', valId: 'sample_papers_practiced_val' }
         ];
 
-        sliderList.forEach(item => {
+        sliderConfig.forEach(item => {
             const sliderEl = document.getElementById(item.id);
             const valEl = document.getElementById(item.valId);
             sliderEl.addEventListener('input', (e) => {
                 valEl.textContent = e.target.value;
                 valEl.classList.add('updated');
-                setTimeout(() => valEl.classList.remove('updated'), 200);
+                setTimeout(() => valEl.classList.remove('updated'), 150);
             });
         });
 
-        // Set gauge circle stroke parameters
+        // SVG Circular Gauge Setup
         const ring = document.getElementById('result-gauge');
         const radius = ring.r.baseVal.value;
         const circumference = 2 * Math.PI * radius;
@@ -193,21 +401,246 @@
         ring.style.strokeDashoffset = circumference;
 
         function setGaugeValue(percent) {
-            // Percent is 0 to 100
             const offset = circumference - (percent / 100) * circumference;
             ring.style.strokeDashoffset = offset;
         }
 
-        // Form Submit
+        // Global Charts Reference
+        let charts = {};
+
+        // Fetch Metadata & Initialize Visualizations
+        async function loadMetadata() {
+            try {
+                const response = await fetch('/metadata');
+                const data = await response.json();
+                
+                // Update Model Performace evaluation panel and model card
+                document.getElementById('metric-r2').textContent = data.metrics.r2.toFixed(4);
+                document.getElementById('metric-mae').textContent = data.metrics.mae.toFixed(2);
+                document.getElementById('metric-rmse').textContent = data.metrics.rmse.toFixed(2);
+                
+                document.getElementById('card-records').textContent = data.dataset_records.toLocaleString();
+                document.getElementById('card-train-acc').textContent = (data.metrics.r2_train * 100).toFixed(2) + '%';
+                document.getElementById('card-pred-acc').textContent = (data.metrics.r2 * 100).toFixed(2) + '%';
+
+                // Render Importance Chart
+                renderImportanceChart(data.feature_importances);
+                // Render Scatter Chart
+                renderScatterChart(data.scatter_data);
+                // Render Residual Chart
+                renderResidualChart(data.residual_data);
+                // Render Heatmap
+                renderCorrelationHeatmap(data.correlation_data);
+
+            } catch (err) {
+                console.error("Failed to load metadata: ", err);
+            }
+        }
+
+        // Chart 1: Feature Importance Horizontal Bar
+        function renderImportanceChart(importances) {
+            const ctx = document.getElementById('importance-chart').getContext('2d');
+            const labels = Object.keys(importances);
+            const values = Object.values(importances);
+
+            charts.importance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Relative Importance',
+                        data: values,
+                        backgroundColor: 'rgba(175, 75, 45, 0.7)',
+                        borderColor: 'rgb(175, 75, 45)',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#ccc' } },
+                        y: { grid: { display: false }, ticks: { color: '#ccc' } }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Actual vs Predicted Scatter
+        function renderScatterChart(scatterPoints) {
+            const ctx = document.getElementById('scatter-chart').getContext('2d');
+            
+            charts.scatter = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Test Points',
+                        data: scatterPoints,
+                        backgroundColor: 'rgba(138, 43, 226, 0.7)',
+                        borderColor: 'rgb(138, 43, 226)',
+                        pointRadius: 4
+                    }, {
+                        label: 'Ideal Reference',
+                        data: [{x: 40, y: 40}, {x: 100, y: 100}],
+                        type: 'line',
+                        borderColor: 'rgba(0, 240, 255, 0.5)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Actual Score', color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#ccc' } },
+                        y: { title: { display: true, text: 'Predicted Score', color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#ccc' } }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: Residual Error Plot
+        function renderResidualChart(residuals) {
+            const ctx = document.getElementById('residual-chart').getContext('2d');
+            
+            charts.residual = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Residual Error (y - y_hat)',
+                        data: residuals,
+                        backgroundColor: 'rgba(255, 20, 147, 0.7)',
+                        pointRadius: 4
+                    }, {
+                        label: 'Zero Error Line',
+                        data: [{x: 40, y: 0}, {x: 100, y: 0}],
+                        type: 'line',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 1.5,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Predicted Fit Value', color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#ccc' } },
+                        y: { title: { display: true, text: 'Residual Difference', color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#ccc' } }
+                    }
+                }
+            });
+        }
+
+        // Custom render Heatmap using CSS grid matrix for ultra-modern visuals
+        function renderCorrelationHeatmap(corrData) {
+            const heatmapEl = document.getElementById('correlation-heatmap');
+            heatmapEl.innerHTML = '';
+            
+            // Build the header cells row
+            const labels = corrData.labels;
+            
+            // Add top corner spacer cell
+            heatmapEl.appendChild(createHeaderCell(""));
+            labels.forEach(lbl => heatmapEl.appendChild(createHeaderCell(lbl)));
+            
+            // Row-by-row rendering
+            for (let i = 0; i < labels.length; i++) {
+                // Add row header label
+                heatmapEl.appendChild(createHeaderCell(labels[i]));
+                
+                for (let j = 0; j < labels.length; j++) {
+                    const coeff = corrData.matrix[i][j];
+                    heatmapEl.appendChild(createCorrelationCell(coeff));
+                }
+            }
+        }
+
+        function createHeaderCell(text) {
+            const el = document.createElement('div');
+            el.className = 'heatmap-header-cell';
+            el.textContent = text;
+            return el;
+        }
+
+        function createCorrelationCell(val) {
+            const el = document.createElement('div');
+            el.className = 'heatmap-cell';
+            el.textContent = val.toFixed(2);
+            
+            // Heatmap color intensity: Purple for positive correlation, Pink/Cyan for others
+            const absoluteVal = Math.abs(val);
+            if (val >= 0) {
+                el.style.backgroundColor = `rgba(138, 43, 226, ${absoluteVal * 0.8})`;
+            } else {
+                el.style.backgroundColor = `rgba(255, 20, 147, ${absoluteVal * 0.8})`;
+            }
+            return el;
+        }
+
+        // Fetch & Populate Prediction History logs
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/history');
+                const historyList = await response.json();
+                
+                const tableBody = document.getElementById('history-rows');
+                if (historyList.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">No prediction records found.</td></tr>`;
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                historyList.forEach(row => {
+                    const dateObj = new Date(row.date);
+                    const formattedDate = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    const tr = document.createElement('tr');
+                    
+                    // Style class for category inside list
+                    let categoryClass = '';
+                    if (row.category === 'Excellent') categoryClass = 'badge-excellent';
+                    else if (row.category === 'Very Good') categoryClass = 'badge-vgood';
+                    else if (row.category === 'Good') categoryClass = 'badge-good';
+                    else if (row.category === 'Average') categoryClass = 'badge-avg';
+                    else categoryClass = 'badge-assistance';
+
+                    tr.innerHTML = `
+                        <td>${formattedDate}</td>
+                        <td>${row.previous_score}</td>
+                        <td>${row.attendance}%</td>
+                        <td>${row.hours_studied} hrs</td>
+                        <td>${row.sleep_hours} hrs</td>
+                        <td>${row.papers_practiced}</td>
+                        <td>${row.extracurricular}</td>
+                        <td class="fw-bold">${row.predicted_score}</td>
+                        <td><span class="badge-custom ${categoryClass}">${row.category}</span></td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Failed to load history list:", err);
+            }
+        }
+
+        // Form Submit Prediction Execution
         const form = document.getElementById('prediction-form');
         const idleView = document.getElementById('result-idle');
         const loadingView = document.getElementById('result-loading');
         const successView = document.getElementById('result-success');
 
+        // Store last prediction inputs globally for PDF generator reference
+        let lastPredictionResult = null;
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // UI State transitions
             idleView.classList.add('hidden');
             successView.classList.add('hidden');
             loadingView.classList.remove('hidden');
@@ -229,27 +662,53 @@
 
                 const result = await response.json();
                 
-                // Minimum loading time for visual experience
                 setTimeout(() => {
                     loadingView.classList.add('hidden');
                     
                     if (result.success) {
                         successView.classList.remove('hidden');
+                        lastPredictionResult = result;
+
+                        // Animate score counter
+                        animateScore(result.predicted_score);
+                        setGaugeValue(result.predicted_score);
                         
-                        const score = result.predicted_performance_index;
-                        animateScore(score);
-                        setGaugeValue(score);
-                        generateInsights(score, result.inputs);
+                        // Update timing and badge
+                        document.getElementById('metric-speed').textContent = result.prediction_time_ms.toFixed(1);
+                        
+                        // Update recommendations
+                        const recsList = document.getElementById('recommendations-list');
+                        recsList.innerHTML = '';
+                        result.recommendations.forEach(rec => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<span class="bullet">⭐</span>${rec}`;
+                            recsList.appendChild(li);
+                        });
+
+                        // Set level class
+                        const levelBadge = document.getElementById('performance-level');
+                        levelBadge.textContent = result.category;
+                        levelBadge.className = 'insight-badge'; // reset
+                        
+                        if (result.category === 'Excellent') levelBadge.classList.add('lvl-outstanding');
+                        else if (result.category === 'Very Good') levelBadge.classList.add('lvl-above');
+                        else if (result.category === 'Good') levelBadge.classList.add('lvl-above');
+                        else if (result.category === 'Average') levelBadge.classList.add('lvl-average');
+                        else levelBadge.classList.add('lvl-warning');
+
+                        // Refresh Prediction History Table logs
+                        fetchHistory();
+
                     } else {
                         idleView.classList.remove('hidden');
                         alert('Prediction error: ' + result.error);
                     }
                 }, 800);
-                
+
             } catch (err) {
                 loadingView.classList.add('hidden');
                 idleView.classList.remove('hidden');
-                alert('Connection error. Is the server running?');
+                alert('Inference error. Is Flask server running?');
                 console.error(err);
             }
         });
@@ -257,8 +716,8 @@
         function animateScore(targetScore) {
             const scoreDisplay = document.getElementById('predicted-score');
             let currentScore = 0;
-            const duration = 1000; // ms
-            const interval = 15; // ms
+            const duration = 1000; 
+            const interval = 15; 
             const step = targetScore / (duration / interval);
             
             const timer = setInterval(() => {
@@ -271,57 +730,57 @@
             }, interval);
         }
 
-        function generateInsights(score, inputs) {
-            const lvlBadge = document.getElementById('performance-level');
-            const desc = document.getElementById('insight-text');
-            const badgeGrid = document.getElementById('badge-grid');
-
-            // Grade boundaries based on Performance Index
-            let level = '';
-            let levelClass = '';
-            let text = '';
-
-            if (score >= 85) {
-                level = 'Outstanding Index';
-                levelClass = 'lvl-outstanding';
-                text = 'Outstanding! The student shows exceptional performance metrics. Strong combination of prior academic scores, consistency in attendance, and effective daily study routines.';
-            } else if (score >= 70) {
-                level = 'Above Average Index';
-                levelClass = 'lvl-above';
-                text = 'The student maintains a healthy performance projection. Continued focus on study hours and maintaining high attendance will help keep this trajectory solid.';
-            } else if (score >= 50) {
-                level = 'Average Index';
-                levelClass = 'lvl-average';
-                text = 'Average projection. Boosting active daily study hours, practicing more sample question papers, or increasing attendance rate could elevate the index.';
-            } else {
-                level = 'Action Recommended';
-                levelClass = 'lvl-warning';
-                text = 'Performance index indicates support is required. Recommending supplemental study programs, structured attendance tracking, and lifestyle reviews (sleep/habits).';
+        // Export Report PDF logic
+        function downloadPDFReport() {
+            if (!lastPredictionResult) {
+                alert("Please perform a prediction assessment first before downloading a report.");
+                return;
             }
 
-            lvlBadge.textContent = level;
-            lvlBadge.className = 'insight-badge ' + levelClass;
-            desc.textContent = text;
-
-            // Generate clean badges
-            badgeGrid.innerHTML = '';
+            // Populate the print report template
+            const result = lastPredictionResult;
+            document.getElementById('pdf-date').textContent = new Date().toLocaleString();
+            document.getElementById('pdf-score').textContent = result.predicted_score;
+            document.getElementById('pdf-category').textContent = result.category;
             
-            const formatLabel = (key, val) => {
-                if (key === 'hours_studied') return `Study: ${val} hrs`;
-                if (key === 'sleep_hours') return `Sleep: ${val} hrs`;
-                if (key === 'sample_papers_practiced') return `Papers: ${val}`;
-                if (key === 'extracurricular_activities') return `Extracurriculars: ${val}`;
-                return `${key}: ${val}`;
+            document.getElementById('pdf-in-prev').textContent = result.inputs.previous_scores;
+            document.getElementById('pdf-in-attend').textContent = result.inputs.attendance + '%';
+            document.getElementById('pdf-in-study').textContent = result.inputs.hours_studied + ' Hours';
+            document.getElementById('pdf-in-sleep').textContent = result.inputs.sleep_hours + ' Hours';
+            document.getElementById('pdf-in-papers').textContent = result.inputs.sample_papers_practiced;
+            document.getElementById('pdf-in-extra').textContent = result.inputs.extracurricular_activities;
+
+            const recsPdfList = document.getElementById('pdf-recs');
+            recsPdfList.innerHTML = '';
+            result.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = rec;
+                recsPdfList.appendChild(li);
+            });
+
+            // html2pdf options
+            const pdfContainer = document.getElementById('pdf-report-template');
+            pdfContainer.classList.remove('hidden');
+            
+            const opt = {
+                margin:       0.5,
+                filename:     'EduPredict_Student_Report.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
-            for (const [key, value] of Object.entries(inputs)) {
-                if (key === 'previous_scores' || key === 'attendance') continue;
-                const badge = document.createElement('div');
-                badge.className = 'feature-badge';
-                badge.textContent = formatLabel(key, value);
-                badgeGrid.appendChild(badge);
-            }
+            html2pdf().from(pdfContainer).set(opt).save().then(() => {
+                pdfContainer.classList.add('hidden');
+            });
         }
+
+        // Initial Load on boot
+        window.addEventListener('load', () => {
+            loadMetadata();
+            fetchHistory();
+        });
     </script>
 </body>
 </html>

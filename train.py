@@ -1,4 +1,5 @@
 import os
+import time
 import joblib
 import pandas as pd
 import numpy as np
@@ -46,6 +47,7 @@ def train_model():
     best_r2 = -1
     best_model_name = None
     best_pipeline = None
+    best_metrics = {}
     
     for name, model in models.items():
         # Create pipeline
@@ -58,7 +60,9 @@ def train_model():
         pipeline.fit(X_train, y_train)
         
         # Predict on test set
+        start_time = time.time()
         y_pred = pipeline.predict(X_test)
+        pred_time = (time.time() - start_time) / len(X_test)  # average prediction time per sample in seconds
         
         # Evaluate
         mae = mean_absolute_error(y_test, y_pred)
@@ -75,6 +79,12 @@ def train_model():
             best_r2 = r2
             best_model_name = name
             best_pipeline = pipeline
+            best_metrics = {
+                'mae': float(mae),
+                'rmse': float(rmse),
+                'r2': float(r2),
+                'pred_time_ms': float(pred_time * 1000)  # in milliseconds
+            }
             
     print(f"\nBest Model: {best_model_name} with R2 Score of {best_r2:.4f}")
     
@@ -84,15 +94,63 @@ def train_model():
     joblib.dump(best_pipeline, model_save_path)
     print(f"Saved the best trained model pipeline to {model_save_path}!")
     
-    # Save feature names / preprocessor info for reference in app
+    # Calculate Training Accuracy (R^2 on training set)
+    y_train_pred = best_pipeline.predict(X_train)
+    r2_train = r2_score(y_train, y_train_pred)
+    best_metrics['r2_train'] = float(r2_train)
+    
+    # Compile additional statistics for visualization
+    # 1. Feature Importances
+    regressor = best_pipeline.named_steps['regressor']
+    importances = regressor.feature_importances_
+    
+    # Standard numerical order: Hours Studied, Previous Scores, Sleep Hours, Sample Papers, Attendance.
+    # Extracurricular is OHE, which splits into two columns at index 5 and 6.
+    importance_map = {
+        'Previous Score': float(importances[1]),
+        'Study Hours': float(importances[0]),
+        'Attendance': float(importances[4]),
+        'Practice Papers': float(importances[3]),
+        'Sleep Hours': float(importances[2]),
+        'Extracurricular Activities': float(importances[5] + importances[6]) if len(importances) > 6 else float(importances[5])
+    }
+    
+    # 2. Scatter Plot Data (First 150 test samples)
+    y_test_pred = best_pipeline.predict(X_test)
+    scatter_data = []
+    for act, pred in zip(y_test[:150], y_test_pred[:150]):
+        scatter_data.append({'x': float(act), 'y': float(pred)})
+        
+    # 3. Residual Error Data
+    residual_data = []
+    for act, pred in zip(y_test[:150], y_test_pred[:150]):
+        residual_data.append({'x': float(pred), 'y': float(act - pred)})
+        
+    # 4. Correlation Matrix of original numerical columns + target
+    corr_df = df[['Hours Studied', 'Previous Scores', 'Sleep Hours', 'Sample Question Papers Practiced', 'Attendance', 'Performance Index']].corr()
+    corr_data = {
+        'labels': ['Study Hours', 'Previous Score', 'Sleep Hours', 'Practice Papers', 'Attendance', 'Performance Index'],
+        'matrix': corr_df.values.tolist()
+    }
+    
+    # Compile metadata card info
     metadata = {
         'model_name': best_model_name,
-        'r2_score': best_r2,
+        'metrics': best_metrics,
+        'feature_importances': importance_map,
+        'scatter_data': scatter_data,
+        'residual_data': residual_data,
+        'correlation_data': corr_data,
+        'dataset_records': len(df),
+        'dataset_features': len(X.columns),
+        'train_test_split': '80% Train / 20% Test',
         'categorical_features': categorical_cols,
         'numerical_features': numerical_cols
     }
-    joblib.dump(metadata, 'models/metadata.pkl')
-    print("Saved model metadata.")
+    
+    metadata_save_path = 'models/metadata.pkl'
+    joblib.dump(metadata, metadata_save_path)
+    print("Saved model metadata successfully!")
 
 if __name__ == '__main__':
     train_model()
