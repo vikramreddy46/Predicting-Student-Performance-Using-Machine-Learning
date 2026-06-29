@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Index Predictor | AI Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background-decor">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🎓</span>
+                <h1>EduPredict AI</h1>
+            </div>
+            <div class="model-status {% if model_loaded %}loaded{% else %}error{% endif %}">
+                <span class="status-indicator"></span>
+                <span class="status-text">
+                    {% if model_loaded %}
+                        Model Active (Gradient Boosting)
+                    {% else %}
+                        Model Offline (Please run train.py)
+                    {% endif %}
+                </span>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <!-- Left Panel: Form Input -->
+            <section class="panel form-panel">
+                <div class="panel-header">
+                    <h2>Student Parameters</h2>
+                    <p>Enter study habits, previous scores, and academic parameters to predict the overall performance index.</p>
+                </div>
+                
+                <form id="prediction-form" class="predict-form">
+                    <!-- Standard Sliders Grid -->
+                    <div class="slider-section" style="margin-top: 0; padding-top: 0; border-top: none;">
+                        <h3>Academic Inputs</h3>
+                        
+                        <div class="form-group slider-group">
+                            <div class="slider-label-row">
+                                <label for="previous_scores">Previous Exam Scores</label>
+                                <span class="slider-value" id="previous_scores_val">75</span>
+                            </div>
+                            <input type="range" id="previous_scores" name="previous_scores" min="0" max="100" value="75" class="score-slider">
+                        </div>
+
+                        <div class="form-group slider-group">
+                            <div class="slider-label-row">
+                                <label for="attendance">Attendance Rate (%)</label>
+                                <span class="slider-value" id="attendance_val">85</span>
+                            </div>
+                            <input type="range" id="attendance" name="attendance" min="0" max="100" value="85" class="score-slider">
+                        </div>
+                    </div>
+
+                    <div class="slider-section">
+                        <h3>Study & Lifestyle Inputs</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group slider-group">
+                                <div class="slider-label-row">
+                                    <label for="hours_studied">Hours Studied / Day</label>
+                                    <span class="slider-value" id="hours_studied_val">5</span>
+                                </div>
+                                <input type="range" id="hours_studied" name="hours_studied" min="1" max="10" value="5" class="score-slider">
+                            </div>
+                            
+                            <div class="form-group slider-group">
+                                <div class="slider-label-row">
+                                    <label for="sleep_hours">Sleep Hours / Night</label>
+                                    <span class="slider-value" id="sleep_hours_val">7</span>
+                                </div>
+                                <input type="range" id="sleep_hours" name="sleep_hours" min="4" max="10" value="7" class="score-slider">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group slider-group">
+                                <div class="slider-label-row">
+                                    <label for="sample_papers_practiced">Practice Question Papers</label>
+                                    <span class="slider-value" id="sample_papers_practiced_val">3</span>
+                                </div>
+                                <input type="range" id="sample_papers_practiced" name="sample_papers_practiced" min="0" max="10" value="3" class="score-slider">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="extracurricular_activities">Extracurricular Activities</label>
+                                <select id="extracurricular_activities" name="extracurricular_activities" required>
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" {% if not model_loaded %}disabled{% endif %}>
+                        <span>Analyze & Predict Performance</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Panel: Output & Insights -->
+            <section class="panel result-panel">
+                <div class="prediction-idle" id="result-idle">
+                    <div class="idle-graphic">
+                        <div class="pulsing-brain">🧠</div>
+                    </div>
+                    <h3>Ready for Prediction</h3>
+                    <p>Enter student parameters and click predict to run the Gradient Boosting assessment pipeline.</p>
+                </div>
+
+                <div class="prediction-loading hidden" id="result-loading">
+                    <div class="spinner">
+                        <div class="double-bounce1"></div>
+                        <div class="double-bounce2"></div>
+                    </div>
+                    <h3>Computing Index</h3>
+                    <p>Running inferences on the trained regression model...</p>
+                </div>
+
+                <div class="prediction-success hidden" id="result-success">
+                    <div class="gauge-container">
+                        <svg class="gauge-svg" viewBox="0 0 200 200">
+                            <!-- Background Track -->
+                            <circle class="gauge-track" cx="100" cy="100" r="85"></circle>
+                            <!-- Animated Value Ring -->
+                            <circle class="gauge-ring" id="result-gauge" cx="100" cy="100" r="85"></circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <span class="score-num" id="predicted-score">0</span>
+                            <span class="score-label">Performance Index</span>
+                        </div>
+                    </div>
+
+                    <div class="insights-container">
+                        <h3>Model Insights</h3>
+                        <div class="insight-badge" id="performance-level">Excellent</div>
+                        <p class="insight-desc" id="insight-text">
+                            The student is predicted to achieve a stellar performance score.
+                        </p>
+                        
+                        <div class="features-summary">
+                            <h4>Feature Vector</h4>
+                            <div class="badge-grid" id="badge-grid">
+                                <!-- Dynamic Badges -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>Data Science Major Project | Model: Gradient Boosting Regressor | Built with Flask & Vanilla CSS</p>
+        </footer>
+    </div>
+
+    <script>
+        // Update slider numeric values dynamically
+        const sliderList = [
+            { id: 'previous_scores', valId: 'previous_scores_val' },
+            { id: 'attendance', valId: 'attendance_val' },
+            { id: 'hours_studied', valId: 'hours_studied_val' },
+            { id: 'sleep_hours', valId: 'sleep_hours_val' },
+            { id: 'sample_papers_practiced', valId: 'sample_papers_practiced_val' }
+        ];
+
+        sliderList.forEach(item => {
+            const sliderEl = document.getElementById(item.id);
+            const valEl = document.getElementById(item.valId);
+            sliderEl.addEventListener('input', (e) => {
+                valEl.textContent = e.target.value;
+                valEl.classList.add('updated');
+                setTimeout(() => valEl.classList.remove('updated'), 200);
+            });
+        });
+
+        // Set gauge circle stroke parameters
+        const ring = document.getElementById('result-gauge');
+        const radius = ring.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius;
+        ring.style.strokeDasharray = `${circumference} ${circumference}`;
+        ring.style.strokeDashoffset = circumference;
+
+        function setGaugeValue(percent) {
+            // Percent is 0 to 100
+            const offset = circumference - (percent / 100) * circumference;
+            ring.style.strokeDashoffset = offset;
+        }
+
+        // Form Submit
+        const form = document.getElementById('prediction-form');
+        const idleView = document.getElementById('result-idle');
+        const loadingView = document.getElementById('result-loading');
+        const successView = document.getElementById('result-success');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // UI State transitions
+            idleView.classList.add('hidden');
+            successView.classList.add('hidden');
+            loadingView.classList.remove('hidden');
+
+            const formData = new FormData(form);
+            const jsonData = {};
+            formData.forEach((value, key) => {
+                jsonData[key] = value;
+            });
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+
+                const result = await response.json();
+                
+                // Minimum loading time for visual experience
+                setTimeout(() => {
+                    loadingView.classList.add('hidden');
+                    
+                    if (result.success) {
+                        successView.classList.remove('hidden');
+                        
+                        const score = result.predicted_performance_index;
+                        animateScore(score);
+                        setGaugeValue(score);
+                        generateInsights(score, result.inputs);
+                    } else {
+                        idleView.classList.remove('hidden');
+                        alert('Prediction error: ' + result.error);
+                    }
+                }, 800);
+                
+            } catch (err) {
+                loadingView.classList.add('hidden');
+                idleView.classList.remove('hidden');
+                alert('Connection error. Is the server running?');
+                console.error(err);
+            }
+        });
+
+        function animateScore(targetScore) {
+            const scoreDisplay = document.getElementById('predicted-score');
+            let currentScore = 0;
+            const duration = 1000; // ms
+            const interval = 15; // ms
+            const step = targetScore / (duration / interval);
+            
+            const timer = setInterval(() => {
+                currentScore += step;
+                if (currentScore >= targetScore) {
+                    currentScore = targetScore;
+                    clearInterval(timer);
+                }
+                scoreDisplay.textContent = Math.round(currentScore);
+            }, interval);
+        }
+
+        function generateInsights(score, inputs) {
+            const lvlBadge = document.getElementById('performance-level');
+            const desc = document.getElementById('insight-text');
+            const badgeGrid = document.getElementById('badge-grid');
+
+            // Grade boundaries based on Performance Index
+            let level = '';
+            let levelClass = '';
+            let text = '';
+
+            if (score >= 85) {
+                level = 'Outstanding Index';
+                levelClass = 'lvl-outstanding';
+                text = 'Outstanding! The student shows exceptional performance metrics. Strong combination of prior academic scores, consistency in attendance, and effective daily study routines.';
+            } else if (score >= 70) {
+                level = 'Above Average Index';
+                levelClass = 'lvl-above';
+                text = 'The student maintains a healthy performance projection. Continued focus on study hours and maintaining high attendance will help keep this trajectory solid.';
+            } else if (score >= 50) {
+                level = 'Average Index';
+                levelClass = 'lvl-average';
+                text = 'Average projection. Boosting active daily study hours, practicing more sample question papers, or increasing attendance rate could elevate the index.';
+            } else {
+                level = 'Action Recommended';
+                levelClass = 'lvl-warning';
+                text = 'Performance index indicates support is required. Recommending supplemental study programs, structured attendance tracking, and lifestyle reviews (sleep/habits).';
+            }
+
+            lvlBadge.textContent = level;
+            lvlBadge.className = 'insight-badge ' + levelClass;
+            desc.textContent = text;
+
+            // Generate clean badges
+            badgeGrid.innerHTML = '';
+            
+            const formatLabel = (key, val) => {
+                if (key === 'hours_studied') return `Study: ${val} hrs`;
+                if (key === 'sleep_hours') return `Sleep: ${val} hrs`;
+                if (key === 'sample_papers_practiced') return `Papers: ${val}`;
+                if (key === 'extracurricular_activities') return `Extracurriculars: ${val}`;
+                return `${key}: ${val}`;
+            };
+
+            for (const [key, value] of Object.entries(inputs)) {
+                if (key === 'previous_scores' || key === 'attendance') continue;
+                const badge = document.createElement('div');
+                badge.className = 'feature-badge';
+                badge.textContent = formatLabel(key, value);
+                badgeGrid.appendChild(badge);
+            }
+        }
+    </script>
+</body>
+</html>
